@@ -4,6 +4,7 @@ import '../models/song.dart';
 import '../services/music_scanner.dart';
 import 'now_playing_screen.dart';
 import '../services/audio_player_service.dart';
+import 'songs_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -90,7 +91,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
                               return GestureDetector(
                                 onTap: () async {
-                                  await _player.playSong(song,
+                                  await _player.playSong(
+                                    song,
                                     playlist: _songs,
                                   );
 
@@ -170,7 +172,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           : '${_songs.length} songs',
                     ),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => SongsScreen(songs: _songs),
+                        ),
+                      );
+                    },
                   ),
 
                   ListTile(
