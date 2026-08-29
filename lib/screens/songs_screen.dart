@@ -14,15 +14,46 @@ class SongsScreen extends StatefulWidget {
 }
 
 class _SongsScreenState extends State<SongsScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  List<Song> get _filteredSongs {
+    final query = _searchController.text.toLowerCase().trim();
+
+    if (query.isEmpty) {
+      return widget.songs;
+    }
+
+    return widget.songs.where((song) {
+      return song.title.toLowerCase().contains(query) ||
+          song.artist.toLowerCase().contains(query);
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final player = AudioPlayerService.instance;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Songs',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: TextField(
+          controller: _searchController,
+          onChanged: (value) {
+            setState(() {});
+          },
+          decoration: InputDecoration(
+            hintText: 'Search songs',
+            prefixIcon: const Icon(Icons.search),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade700),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.white),
+            ),
+            filled: true,
+            fillColor: Colors.black12,
+          ),
         ),
       ),
       body: widget.songs.isEmpty
@@ -34,9 +65,9 @@ class _SongsScreenState extends State<SongsScreen> {
                 final currentSong = snapshot.data;
 
                 return ListView.builder(
-                  itemCount: widget.songs.length,
+                  itemCount: _filteredSongs.length,
                   itemBuilder: (context, index) {
-                    final song = widget.songs[index];
+                    final song = _filteredSongs[index];
 
                     final isCurrentSong = currentSong?.id == song.id;
 
