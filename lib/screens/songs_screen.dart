@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/song.dart';
 import '../services/audio_player_service.dart';
 import 'now_playing_screen.dart';
+import '../services/favorites_service.dart';
 
 class SongsScreen extends StatefulWidget {
   final List<Song> songs;
@@ -15,6 +16,7 @@ class SongsScreen extends StatefulWidget {
 
 class _SongsScreenState extends State<SongsScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final favorites = FavoritesService.instance;
   List<Song> get _filteredSongs {
     final query = _searchController.text.toLowerCase().trim();
 
@@ -56,59 +58,79 @@ class _SongsScreenState extends State<SongsScreen> {
           ),
         ),
       ),
-      body: widget.songs.isEmpty
-          ? const Center(child: Text('No music found'))
-          : StreamBuilder<Song?>(
-              stream: player.currentSongStream,
-              initialData: player.currentSong,
-              builder: (context, snapshot) {
-                final currentSong = snapshot.data;
+      body: ValueListenableBuilder<int>(
+        valueListenable: favorites.changes,
+        builder: (context, _, child) {
+          return widget.songs.isEmpty
+              ? const Center(child: Text('No music found'))
+              : StreamBuilder<Song?>(
+                  stream: player.currentSongStream,
+                  initialData: player.currentSong,
+                  builder: (context, snapshot) {
+                    final currentSong = snapshot.data;
 
-                return ListView.builder(
-                  itemCount: _filteredSongs.length,
-                  itemBuilder: (context, index) {
-                    final song = _filteredSongs[index];
+                    return ListView.builder(
+                      itemCount: _filteredSongs.length,
+                      itemBuilder: (context, index) {
+                        final song = _filteredSongs[index];
 
-                    final isCurrentSong = currentSong?.id == song.id;
+                        final isCurrentSong = currentSong?.id == song.id;
 
-                    return ListTile(
-                      leading: CircleAvatar(
-                        child: Icon(
-                          isCurrentSong ? Icons.play_arrow : Icons.music_note,
-                        ),
-                      ),
-                      title: Text(
-                        song.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontWeight: isCurrentSong
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                        ),
-                      ),
-                      subtitle: Text(
-                        song.artist,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      onTap: () async {
-                        await player.playSong(song, playlist: widget.songs);
-
-                        if (!context.mounted) return;
-
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const NowPlayingScreen(),
+                        return ListTile(
+                          leading: CircleAvatar(
+                            child: Icon(
+                              isCurrentSong
+                                  ? Icons.play_arrow
+                                  : Icons.music_note,
+                            ),
                           ),
+                          title: Text(
+                            song.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontWeight: isCurrentSong
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                          subtitle: Text(
+                            song.artist,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          trailing: IconButton(
+                            icon: Icon(
+                              favorites.isFavorite(song.id)
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              color: favorites.isFavorite(song.id)
+                                  ? Colors.red
+                                  : null,
+                            ),
+                            onPressed: () {
+                              favorites.toggleFavorite(song.id);
+                            },
+                          ),
+                          onTap: () async {
+                            await player.playSong(song, playlist: widget.songs);
+
+                            if (!context.mounted) return;
+
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const NowPlayingScreen(),
+                              ),
+                            );
+                          },
                         );
                       },
                     );
                   },
                 );
-              },
-            ),
+        },
+      ),
     );
   }
 }

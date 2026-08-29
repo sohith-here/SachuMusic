@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/song.dart';
 import '../services/audio_player_service.dart';
+import '../services/favorites_service.dart';
 
 import 'package:just_audio/just_audio.dart';
 
@@ -14,6 +15,7 @@ class NowPlayingScreen extends StatefulWidget {
 
 class _NowPlayingScreenState extends State<NowPlayingScreen> {
   final AudioPlayerService _player = AudioPlayerService.instance;
+  final FavoritesService _favorites = FavoritesService.instance;
 
   @override
   Widget build(BuildContext context) {
@@ -309,9 +311,20 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
 
                       // Favorite
                       IconButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          setState(() {
+                            _favorites.toggleFavorite(song.id);
+                          });
+                        },
                         iconSize: 28,
-                        icon: const Icon(Icons.favorite_border),
+                        color: _favorites.isFavorite(song.id)
+                            ? Colors.red
+                            : null,
+                        icon: Icon(
+                          _favorites.isFavorite(song.id)
+                              ? Icons.favorite
+                              : Icons.favorite_border,
+                        ),
                       ),
                     ],
                   ),
