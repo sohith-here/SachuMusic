@@ -5,6 +5,7 @@ import '../services/music_scanner.dart';
 import 'now_playing_screen.dart';
 import '../services/audio_player_service.dart';
 import 'songs_screen.dart';
+import '../services/recently_played_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -75,69 +76,84 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   const SizedBox(height: 16),
 
-                  SizedBox(
-                    height: 180,
-                    child: _isLoading
-                        ? const Center(child: CircularProgressIndicator())
-                        : _songs.isEmpty
-                        ? const Center(child: Text('No music found'))
-                        : ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: _songs.length,
-                            separatorBuilder: (context, index) =>
-                                const SizedBox(width: 16),
-                            itemBuilder: (context, index) {
-                              final song = _songs[index];
+                  ValueListenableBuilder<int>(
+                    valueListenable: RecentlyPlayedService.instance.changes,
+                    builder: (context, _, child) {
+                      final recentlyPlayed =
+                          RecentlyPlayedService.instance.songs;
 
-                              return GestureDetector(
-                                onTap: () async {
-                                  await _player.playSong(
-                                    song,
-                                    playlist: _songs,
-                                  );
+                      return SizedBox(
+                        height: 180,
+                        child: _isLoading
+                            ? const Center(child: CircularProgressIndicator())
+                            : recentlyPlayed.isEmpty
+                            ? const Center(
+                                child: Text('No recently played songs'),
+                              )
+                            : ListView.separated(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: recentlyPlayed.length,
+                                separatorBuilder: (context, index) =>
+                                    const SizedBox(width: 16),
+                                itemBuilder: (context, index) {
+                                  final song = recentlyPlayed[index];
 
-                                  if (!context.mounted) return;
+                                  return GestureDetector(
+                                    onTap: () async {
+                                      await _player.playSong(
+                                        song,
+                                        playlist: recentlyPlayed,
+                                      );
 
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => const NowPlayingScreen(),
+                                      if (!context.mounted) return;
+
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              const NowPlayingScreen(),
+                                        ),
+                                      );
+                                    },
+                                    child: Container(
+                                      width: 150,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(16),
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .surfaceContainerHighest,
+                                      ),
+                                      child: Center(
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            const Icon(
+                                              Icons.music_note,
+                                              size: 48,
+                                            ),
+                                            const SizedBox(height: 12),
+                                            Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 10,
+                                                  ),
+                                              child: Text(
+                                                song.title,
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
                                     ),
                                   );
                                 },
-                                child: Container(
-                                  width: 150,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(16),
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .surfaceContainerHighest,
-                                  ),
-                                  child: Center(
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        const Icon(Icons.music_note, size: 48),
-                                        const SizedBox(height: 12),
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 10,
-                                          ),
-                                          child: Text(
-                                            song.title,
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
+                              ),
+                      );
+                    },
                   ),
 
                   const SizedBox(height: 32),

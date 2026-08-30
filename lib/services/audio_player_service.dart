@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:just_audio/just_audio.dart';
 
+import 'recently_played_service.dart';
 import '../models/song.dart';
 
 class AudioPlayerService {
@@ -17,6 +18,7 @@ class AudioPlayerService {
   static final AudioPlayerService instance = AudioPlayerService._();
 
   final AudioPlayer player = AudioPlayer();
+  final RecentlyPlayedService _recentlyPlayed = RecentlyPlayedService.instance;
 
   List<Song> _playlist = [];
   List<Song> _originalPlaylist = [];
@@ -82,6 +84,7 @@ class AudioPlayerService {
   // ============================================================
 
   Future<void> playSong(Song song, {required List<Song> playlist}) async {
+    _recentlyPlayed.addSong(song);
     if (song.path == null || song.path!.isEmpty) {
       return;
     }
