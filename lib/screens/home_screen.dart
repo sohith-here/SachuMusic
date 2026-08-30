@@ -6,6 +6,7 @@ import 'now_playing_screen.dart';
 import '../services/audio_player_service.dart';
 import 'songs_screen.dart';
 import '../services/recently_played_service.dart';
+import 'main_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -50,7 +51,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               actions: [
-                IconButton(onPressed: () {}, icon: const Icon(Icons.search)),
+                IconButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => SongsScreen(songs: _songs),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.search),
+                ),
               ],
             ),
 
@@ -203,7 +214,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     title: const Text('Favorites'),
                     subtitle: const Text('Your favorite songs'),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const FavoritesScreen(),
+                        ),
+                      );
+                    },
                   ),
 
                   ListTile(
