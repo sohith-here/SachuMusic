@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 
+import 'playback_history_service.dart';
 import 'recently_played_service.dart';
 import '../models/song.dart';
 
@@ -20,6 +21,8 @@ class AudioPlayerService {
 
   final AudioPlayer player = AudioPlayer();
   final RecentlyPlayedService _recentlyPlayed = RecentlyPlayedService.instance;
+  final PlaybackHistoryService _historyService =
+      PlaybackHistoryService.instance;
 
   List<Song> _playlist = [];
   List<Song> _originalPlaylist = [];
@@ -89,14 +92,16 @@ class AudioPlayerService {
     final songToRemove = _playlist[queueIndex];
     _playlist.removeAt(queueIndex);
 
-    final indexInOriginal =
-        _originalPlaylist.indexWhere((s) => s.id == songToRemove.id);
+    final indexInOriginal = _originalPlaylist.indexWhere(
+      (s) => s.id == songToRemove.id,
+    );
     if (indexInOriginal != -1) {
       _originalPlaylist.removeAt(indexInOriginal);
     }
 
-    final indexInShuffle =
-        _shufflePlaylist.indexWhere((s) => s.id == songToRemove.id);
+    final indexInShuffle = _shufflePlaylist.indexWhere(
+      (s) => s.id == songToRemove.id,
+    );
     if (indexInShuffle != -1) {
       _shufflePlaylist.removeAt(indexInShuffle);
     }
@@ -196,6 +201,9 @@ class AudioPlayerService {
     await player.setLoopMode(LoopMode.off);
 
     await player.play();
+    if (currentSong != null) {
+      _historyService.recordPlayback(currentSong!);
+    }
   }
 
   // ============================================================
@@ -323,6 +331,7 @@ class AudioPlayerService {
 
     // Start playback.
     await player.play();
+    _historyService.recordPlayback(song);
   }
   // ============================================================
   // SONG COMPLETED
@@ -340,6 +349,7 @@ class AudioPlayerService {
     if (_repeatMode == LoopMode.one) {
       await player.seek(Duration.zero);
       await player.play();
+      _historyService.recordPlayback(currentSong!);
       return;
     }
 

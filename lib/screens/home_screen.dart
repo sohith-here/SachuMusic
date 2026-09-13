@@ -9,6 +9,7 @@ import 'songs_screen.dart';
 import '../services/recently_played_service.dart';
 import 'main_screen.dart';
 import 'playlists_screen.dart';
+import 'history_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -162,12 +163,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                                         type: ArtworkType.AUDIO,
                                                         artworkFit:
                                                             BoxFit.cover,
-                                                        nullArtworkWidget:
-                                                            Container(
-                                                          color:
-                                                              Theme.of(context)
-                                                                  .colorScheme
-                                                                  .surfaceContainer,
+                                                        nullArtworkWidget: Container(
+                                                          color: Theme.of(context)
+                                                              .colorScheme
+                                                              .surfaceContainer,
                                                           child: const Icon(
                                                             Icons.music_note,
                                                             size: 40,
@@ -267,6 +266,21 @@ class _HomeScreenState extends State<HomeScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (_) => const PlaylistsScreen(),
+                        ),
+                      );
+                    },
+                  ),
+
+                  ListTile(
+                    leading: const Icon(Icons.history),
+                    title: const Text('History'),
+                    subtitle: const Text('Your listening history'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const HistoryScreen(),
                         ),
                       );
                     },
