@@ -216,4 +216,15 @@ class PlaylistService {
     _saveFuture = _savePlaylists();
     return true;
   }
+
+  bool togglePinPlaylist(String playlistId) {
+    final index = _playlists.indexWhere((p) => p.id == playlistId);
+    if (index == -1) return false;
+
+    final playlist = _playlists[index];
+    _playlists[index] = playlist.copyWith(isPinned: !playlist.isPinned);
+    changes.value++;
+    _saveFuture = _savePlaylists();
+    return true;
+  }
 }

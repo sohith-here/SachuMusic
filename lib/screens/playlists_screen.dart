@@ -205,7 +205,10 @@ class _PlaylistsScreenState extends State<PlaylistsScreen> {
       body: ValueListenableBuilder<int>(
         valueListenable: _playlistService.changes,
         builder: (context, _, child) {
-          final playlists = _playlistService.playlists;
+          final playlists = [
+            ..._playlistService.playlists.where((p) => p.isPinned),
+            ..._playlistService.playlists.where((p) => !p.isPinned),
+          ];
 
           if (playlists.isEmpty) {
             return Center(
@@ -283,6 +286,21 @@ class _PlaylistsScreenState extends State<PlaylistsScreen> {
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    IconButton(
+                      icon: Icon(
+                        playlist.isPinned
+                            ? Icons.push_pin
+                            : Icons.push_pin_outlined,
+                        color: playlist.isPinned
+                            ? Theme.of(context).colorScheme.primary
+                            : null,
+                      ),
+                      tooltip: playlist.isPinned
+                          ? 'Unpin playlist'
+                          : 'Pin playlist',
+                      onPressed: () =>
+                          _playlistService.togglePinPlaylist(playlist.id),
+                    ),
                     IconButton(
                       icon: const Icon(Icons.edit_outlined),
                       tooltip: 'Rename playlist',
