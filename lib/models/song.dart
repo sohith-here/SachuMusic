@@ -16,4 +16,28 @@ class Song {
     required this.duration,
     this.artworkId,
   });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'title': title,
+      'artist': artist,
+      'album': album,
+      'path': path,
+      'durationMs': duration.inMilliseconds,
+      'artworkId': artworkId,
+    };
+  }
+
+  factory Song.fromMap(Map<String, dynamic> map) {
+    return Song(
+      id: map['id'] as String? ?? '',
+      title: map['title'] as String? ?? '',
+      artist: map['artist'] as String? ?? 'Unknown artist',
+      album: map['album'] as String? ?? 'Unknown album',
+      path: map['path'] as String?,
+      duration: Duration(milliseconds: map['durationMs'] as int? ?? 0),
+      artworkId: map['artworkId'] as int?,
+    );
+  }
 }

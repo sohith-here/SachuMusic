@@ -36,6 +36,10 @@ dependencies:
   just_audio_media_kit: ^2.1.0
   media_kit_libs_windows_audio: ^1.0.9
   on_audio_query: ^2.9.0
+  path_provider_windows: ^2.3.0
+  shared_preferences: ^2.5.5
+  shared_preferences_platform_interface: ^2.4.2
+  shared_preferences_windows: ^2.4.1
 
 dev_dependencies:
   flutter_test:
