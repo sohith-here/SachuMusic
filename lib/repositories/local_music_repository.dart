@@ -5,6 +5,8 @@ import 'package:on_audio_query/on_audio_query.dart';
 import '../models/song.dart';
 import 'music_repository.dart';
 
+import 'package:flutter/foundation.dart';
+
 class LocalMusicRepository implements MusicRepository {
   final OnAudioQuery _audioQuery = OnAudioQuery();
 
@@ -42,7 +44,11 @@ class LocalMusicRepository implements MusicRepository {
       uriType: UriType.EXTERNAL,
       ignoreCase: true,
     );
-
+    for (final song in songs) {
+      debugPrint(
+        'SONG: ${song.title} | ARTIST: ${song.artist} | ALBUM: ${song.album} | ID: ${song.id}',
+      );
+    }
     return songs.map((song) {
       return Song(
         id: song.id.toString(),
@@ -51,6 +57,7 @@ class LocalMusicRepository implements MusicRepository {
         album: song.album ?? 'Unknown album',
         path: song.data,
         duration: Duration(milliseconds: song.duration ?? 0),
+        artworkId: song.id,
       );
     }).toList();
   }

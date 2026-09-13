@@ -5,6 +5,7 @@ class Song {
   final String album;
   final String? path;
   final Duration duration;
+  final int? artworkId;
 
   const Song({
     required this.id,
@@ -13,5 +14,6 @@ class Song {
     required this.album,
     this.path,
     required this.duration,
+    this.artworkId,
   });
 }

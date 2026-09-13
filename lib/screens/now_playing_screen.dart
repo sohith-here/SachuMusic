@@ -4,6 +4,7 @@ import '../models/song.dart';
 import '../services/audio_player_service.dart';
 import '../services/favorites_service.dart';
 
+import 'package:on_audio_query/on_audio_query.dart';
 import 'package:just_audio/just_audio.dart';
 
 class NowPlayingScreen extends StatefulWidget {
@@ -54,16 +55,36 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       // Album artwork
-                      Container(
-                        width: artworkSize,
-                        height: artworkSize,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(24),
-                          color: Theme.of(context)
-                              .colorScheme
-                              .surfaceContainerHighest,
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: SizedBox(
+                          width: artworkSize,
+                          height: artworkSize,
+                          child: song.artworkId == null
+                              ? Container(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .surfaceContainerHighest,
+                                  child: Icon(
+                                    Icons.music_note,
+                                    size: artworkSize * 0.36,
+                                  ),
+                                )
+                              : QueryArtworkWidget(
+                                  id: song.artworkId!,
+                                  type: ArtworkType.AUDIO,
+                                  artworkFit: BoxFit.cover,
+                                  nullArtworkWidget: Container(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .surfaceContainerHighest,
+                                    child: Icon(
+                                      Icons.music_note,
+                                      size: artworkSize * 0.36,
+                                    ),
+                                  ),
+                                ),
                         ),
-                        child: Icon(Icons.music_note, size: artworkSize * 0.36),
                       ),
 
                       SizedBox(height: largeSpacing),
