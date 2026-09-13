@@ -7,6 +7,7 @@ import 'package:shared_preferences_windows/shared_preferences_windows.dart';
 
 import 'screens/main_screen.dart';
 import 'services/favorites_service.dart';
+import 'services/playlist_service.dart';
 import 'services/recently_played_service.dart';
 
 void main() async {
@@ -22,6 +23,7 @@ void main() async {
   await Future.wait([
     FavoritesService.instance.init(),
     RecentlyPlayedService.instance.init(),
+    PlaylistService.instance.init(),
   ]);
 
   runApp(const SachuMusicApp());
