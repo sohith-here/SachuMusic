@@ -10,6 +10,7 @@ import '../services/recently_played_service.dart';
 import 'main_screen.dart';
 import 'playlists_screen.dart';
 import 'history_screen.dart';
+import 'statistics_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -281,6 +282,21 @@ class _HomeScreenState extends State<HomeScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (_) => const HistoryScreen(),
+                        ),
+                      );
+                    },
+                  ),
+
+                  ListTile(
+                    leading: const Icon(Icons.insights),
+                    title: const Text('Statistics'),
+                    subtitle: const Text('Library & listening overview'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => StatisticsScreen(songs: _songs),
                         ),
                       );
                     },
