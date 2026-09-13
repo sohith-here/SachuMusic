@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:on_audio_query/on_audio_query.dart';
 
 import '../models/song.dart';
 import '../services/music_scanner.dart';
@@ -139,9 +140,40 @@ class _HomeScreenState extends State<HomeScreen> {
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
                                           children: [
-                                            const Icon(
-                                              Icons.music_note,
-                                              size: 48,
+                                            ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              child: SizedBox(
+                                                width: 80,
+                                                height: 80,
+                                                child: song.artworkId == null
+                                                    ? Container(
+                                                        color: Theme.of(context)
+                                                            .colorScheme
+                                                            .surfaceContainer,
+                                                        child: const Icon(
+                                                          Icons.music_note,
+                                                          size: 40,
+                                                        ),
+                                                      )
+                                                    : QueryArtworkWidget(
+                                                        id: song.artworkId!,
+                                                        type: ArtworkType.AUDIO,
+                                                        artworkFit:
+                                                            BoxFit.cover,
+                                                        nullArtworkWidget:
+                                                            Container(
+                                                          color:
+                                                              Theme.of(context)
+                                                                  .colorScheme
+                                                                  .surfaceContainer,
+                                                          child: const Icon(
+                                                            Icons.music_note,
+                                                            size: 40,
+                                                          ),
+                                                        ),
+                                                      ),
+                                              ),
                                             ),
                                             const SizedBox(height: 12),
                                             Padding(

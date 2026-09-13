@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:on_audio_query/on_audio_query.dart';
 
 import '../models/song.dart';
 import '../services/favorites_service.dart';
@@ -123,8 +124,30 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     final song = favoriteSongs[index];
 
                     return ListTile(
-                      leading: const CircleAvatar(
-                        child: Icon(Icons.music_note),
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: SizedBox(
+                          width: 50,
+                          height: 50,
+                          child: song.artworkId == null
+                              ? Container(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .surfaceContainerHighest,
+                                  child: const Icon(Icons.music_note),
+                                )
+                              : QueryArtworkWidget(
+                                  id: song.artworkId!,
+                                  type: ArtworkType.AUDIO,
+                                  artworkFit: BoxFit.cover,
+                                  nullArtworkWidget: Container(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .surfaceContainerHighest,
+                                    child: const Icon(Icons.music_note),
+                                  ),
+                                ),
+                        ),
                       ),
                       title: Text(
                         song.title,

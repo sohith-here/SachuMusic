@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:on_audio_query/on_audio_query.dart';
 
 import '../models/song.dart';
 import '../services/audio_player_service.dart';
@@ -77,12 +78,56 @@ class _SongsScreenState extends State<SongsScreen> {
                         final isCurrentSong = currentSong?.id == song.id;
 
                         return ListTile(
-                          leading: CircleAvatar(
-                            child: Icon(
-                              isCurrentSong
-                                  ? Icons.play_arrow
-                                  : Icons.music_note,
-                            ),
+                          leading: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: SizedBox(
+                                  width: 50,
+                                  height: 50,
+                                  child: song.artworkId == null
+                                      ? Container(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .surfaceContainerHighest,
+                                          child: Icon(
+                                            isCurrentSong
+                                                ? Icons.play_arrow
+                                                : Icons.music_note,
+                                          ),
+                                        )
+                                      : QueryArtworkWidget(
+                                          id: song.artworkId!,
+                                          type: ArtworkType.AUDIO,
+                                          artworkFit: BoxFit.cover,
+                                          nullArtworkWidget: Container(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .surfaceContainerHighest,
+                                            child: Icon(
+                                              isCurrentSong
+                                                  ? Icons.play_arrow
+                                                  : Icons.music_note,
+                                            ),
+                                          ),
+                                        ),
+                                ),
+                              ),
+                              if (isCurrentSong && song.artworkId != null)
+                                Container(
+                                  width: 50,
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    color: Colors.black45,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(
+                                    Icons.play_arrow,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                            ],
                           ),
                           title: Text(
                             song.title,
