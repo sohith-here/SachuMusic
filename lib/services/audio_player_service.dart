@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 
+import 'equalizer_service.dart';
 import 'playback_history_service.dart';
 import 'recently_played_service.dart';
 import '../models/song.dart';
@@ -15,11 +17,25 @@ class AudioPlayerService {
         _handleSongCompleted();
       }
     });
+    if (_androidEqualizer != null) {
+      EqualizerService.instance.setAndroidEqualizer(_androidEqualizer);
+    }
   }
 
   static final AudioPlayerService instance = AudioPlayerService._();
 
-  final AudioPlayer player = AudioPlayer();
+  final AndroidEqualizer? _androidEqualizer = !kIsWeb && Platform.isAndroid
+      ? AndroidEqualizer()
+      : null;
+
+  late final AudioPlayer player = AudioPlayer(
+    audioPipeline: _androidEqualizer != null
+        ? AudioPipeline(androidAudioEffects: [_androidEqualizer])
+        : null,
+  );
+
+  AndroidEqualizer? get androidEqualizer => _androidEqualizer;
+
   final RecentlyPlayedService _recentlyPlayed = RecentlyPlayedService.instance;
   final PlaybackHistoryService _historyService =
       PlaybackHistoryService.instance;

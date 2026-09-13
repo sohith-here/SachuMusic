@@ -7,6 +7,8 @@ import '../services/sleep_timer_service.dart';
 
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:just_audio/just_audio.dart';
+
+import 'equalizer_bottom_sheet.dart';
 import 'up_next_screen.dart';
 
 class NowPlayingScreen extends StatefulWidget {
@@ -20,6 +22,17 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
   final AudioPlayerService _player = AudioPlayerService.instance;
   final FavoritesService _favorites = FavoritesService.instance;
   final SleepTimerService _sleepTimer = SleepTimerService.instance;
+
+  void _showEqualizerModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => const EqualizerBottomSheet(),
+    );
+  }
 
   void _showSleepTimerModal(BuildContext context) {
     const durations = [15, 30, 45, 60, 90];
@@ -132,6 +145,11 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
         title: const Text('Now Playing'),
         centerTitle: true,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.equalizer),
+            tooltip: 'Equalizer',
+            onPressed: () => _showEqualizerModal(context),
+          ),
           ValueListenableBuilder<Duration?>(
             valueListenable: _sleepTimer.remainingTimeNotifier,
             builder: (context, remainingTime, child) {
@@ -145,9 +163,7 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                       ? Theme.of(context).colorScheme.primary
                       : null,
                 ),
-                tooltip: isActive
-                    ? 'Sleep Timer ($formatted)'
-                    : 'Sleep Timer',
+                tooltip: isActive ? 'Sleep Timer ($formatted)' : 'Sleep Timer',
                 onPressed: () => _showSleepTimerModal(context),
               );
             },
@@ -158,9 +174,7 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const UpNextScreen(),
-                ),
+                MaterialPageRoute(builder: (_) => const UpNextScreen()),
               );
             },
           ),
