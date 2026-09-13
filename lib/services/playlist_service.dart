@@ -190,4 +190,30 @@ class PlaylistService {
     _saveFuture = _savePlaylists();
     return true;
   }
+
+  bool reorderSong(String playlistId, int oldIndex, int newIndex) {
+    final index = _playlists.indexWhere((p) => p.id == playlistId);
+    if (index == -1) return false;
+
+    final playlist = _playlists[index];
+    if (oldIndex < 0 ||
+        oldIndex >= playlist.songIds.length ||
+        newIndex < 0 ||
+        newIndex >= playlist.songIds.length) {
+      return false;
+    }
+
+    if (oldIndex == newIndex) {
+      return true;
+    }
+
+    final updatedSongs = List<String>.from(playlist.songIds);
+    final songId = updatedSongs.removeAt(oldIndex);
+    updatedSongs.insert(newIndex, songId);
+
+    _playlists[index] = playlist.copyWith(songIds: updatedSongs);
+    changes.value++;
+    _saveFuture = _savePlaylists();
+    return true;
+  }
 }

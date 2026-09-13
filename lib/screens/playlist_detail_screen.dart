@@ -272,12 +272,26 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
                       ),
                     ),
                     Expanded(
-                      child: ListView.builder(
+                      child: ReorderableListView.builder(
+                        buildDefaultDragHandles: false,
                         itemCount: resolvedSongs.length,
+                        // ignore: deprecated_member_use
+                        onReorder: (oldIndex, newIndex) {
+                          if (newIndex > oldIndex) {
+                            newIndex -= 1;
+                          }
+
+                          _playlistService.reorderSong(
+                            playlist.id,
+                            oldIndex,
+                            newIndex,
+                          );
+                        },
                         itemBuilder: (context, index) {
                           final song = resolvedSongs[index];
 
                           return ListTile(
+                            key: ValueKey(song.id),
                             leading: ClipRRect(
                               borderRadius: BorderRadius.circular(8),
                               child: SizedBox(
@@ -313,15 +327,24 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.remove_circle_outline),
-                              tooltip: 'Remove from playlist',
-                              onPressed: () {
-                                _playlistService.removeSongFromPlaylist(
-                                  playlist.id,
-                                  song.id,
-                                );
-                              },
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.remove_circle_outline),
+                                  tooltip: 'Remove from playlist',
+                                  onPressed: () {
+                                    _playlistService.removeSongFromPlaylist(
+                                      playlist.id,
+                                      song.id,
+                                    );
+                                  },
+                                ),
+                                ReorderableDragStartListener(
+                                  index: index,
+                                  child: const Icon(Icons.drag_handle),
+                                ),
+                              ],
                             ),
                             onTap: () async {
                               await _player.playSong(
