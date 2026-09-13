@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/song.dart';
 import '../services/audio_player_service.dart';
 import '../services/favorites_service.dart';
+import '../services/sleep_timer_service.dart';
 
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:just_audio/just_audio.dart';
@@ -18,6 +19,111 @@ class NowPlayingScreen extends StatefulWidget {
 class _NowPlayingScreenState extends State<NowPlayingScreen> {
   final AudioPlayerService _player = AudioPlayerService.instance;
   final FavoritesService _favorites = FavoritesService.instance;
+  final SleepTimerService _sleepTimer = SleepTimerService.instance;
+
+  void _showSleepTimerModal(BuildContext context) {
+    const durations = [15, 30, 45, 60, 90];
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return ValueListenableBuilder<Duration?>(
+          valueListenable: _sleepTimer.remainingTimeNotifier,
+          builder: (context, remainingTime, child) {
+            final isActive = remainingTime != null;
+
+            return SafeArea(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 4,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Sleep Timer',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            if (isActive)
+                              Text(
+                                _sleepTimer.formattedRemainingTime,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      if (isActive) ...[
+                        const SizedBox(height: 8),
+                        ListTile(
+                          leading: const Icon(
+                            Icons.timer_off,
+                            color: Colors.redAccent,
+                          ),
+                          title: const Text(
+                            'Turn off timer',
+                            style: TextStyle(color: Colors.redAccent),
+                          ),
+                          onTap: () {
+                            _sleepTimer.cancelTimer();
+                            Navigator.pop(sheetContext);
+                            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Sleep timer turned off'),
+                                duration: Duration(seconds: 1),
+                              ),
+                            );
+                          },
+                        ),
+                        const Divider(),
+                      ],
+                      const SizedBox(height: 8),
+                      ...durations.map((minutes) {
+                        return ListTile(
+                          leading: const Icon(Icons.snooze),
+                          title: Text('$minutes minutes'),
+                          onTap: () {
+                            _sleepTimer.startTimer(Duration(minutes: minutes));
+                            Navigator.pop(sheetContext);
+                            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Sleep timer set for $minutes minutes',
+                                ),
+                                duration: const Duration(seconds: 2),
+                              ),
+                            );
+                          },
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +132,26 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
         title: const Text('Now Playing'),
         centerTitle: true,
         actions: [
+          ValueListenableBuilder<Duration?>(
+            valueListenable: _sleepTimer.remainingTimeNotifier,
+            builder: (context, remainingTime, child) {
+              final isActive = remainingTime != null;
+              final formatted = _sleepTimer.formattedRemainingTime;
+
+              return IconButton(
+                icon: Icon(
+                  isActive ? Icons.bedtime : Icons.bedtime_outlined,
+                  color: isActive
+                      ? Theme.of(context).colorScheme.primary
+                      : null,
+                ),
+                tooltip: isActive
+                    ? 'Sleep Timer ($formatted)'
+                    : 'Sleep Timer',
+                onPressed: () => _showSleepTimerModal(context),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.queue_music),
             tooltip: 'Up Next',
