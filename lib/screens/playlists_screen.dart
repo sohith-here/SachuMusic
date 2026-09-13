@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:on_audio_query/on_audio_query.dart';
 
 import '../models/playlist.dart';
+import '../models/song.dart';
+import '../services/music_scanner.dart';
 import '../services/playlist_service.dart';
 import 'playlist_detail_screen.dart';
 
 class PlaylistsScreen extends StatefulWidget {
-  const PlaylistsScreen({super.key});
+  final List<Song>? songs;
+
+  const PlaylistsScreen({super.key, this.songs});
 
   @override
   State<PlaylistsScreen> createState() => _PlaylistsScreenState();
@@ -13,6 +18,34 @@ class PlaylistsScreen extends StatefulWidget {
 
 class _PlaylistsScreenState extends State<PlaylistsScreen> {
   final PlaylistService _playlistService = PlaylistService.instance;
+  final MusicScanner _scanner = MusicScanner();
+  List<Song> _songs = [];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.songs != null) {
+      _songs = widget.songs!;
+    } else {
+      _loadSongs();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant PlaylistsScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.songs != null) {
+      _songs = widget.songs!;
+    }
+  }
+
+  Future<void> _loadSongs() async {
+    final songs = await _scanner.scanSongs();
+    if (!mounted) return;
+    setState(() {
+      _songs = songs;
+    });
+  }
 
   void _showCreatePlaylistDialog(BuildContext context) {
     final controller = TextEditingController();
@@ -59,7 +92,10 @@ class _PlaylistsScreenState extends State<PlaylistsScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => PlaylistDetailScreen(playlistId: created.id),
+        builder: (_) => PlaylistDetailScreen(
+          playlistId: created.id,
+          initialSongs: _songs.isNotEmpty ? _songs : null,
+        ),
       ),
     );
   }
@@ -193,22 +229,47 @@ class _PlaylistsScreenState extends State<PlaylistsScreen> {
             );
           }
 
+          final songMap = {for (final s in _songs) s.id: s};
+
           return ListView.builder(
             itemCount: playlists.length,
             itemBuilder: (context, index) {
               final playlist = playlists[index];
 
+              int? artworkId;
+              for (final songId in playlist.songIds) {
+                final song = songMap[songId];
+                if (song?.artworkId != null) {
+                  artworkId = song!.artworkId;
+                  break;
+                }
+              }
+
               return ListTile(
-                leading: Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(8),
+                leading: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: SizedBox(
+                    width: 50,
+                    height: 50,
+                    child: artworkId == null
+                        ? Container(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHighest,
+                            child: const Icon(Icons.queue_music, size: 28),
+                          )
+                        : QueryArtworkWidget(
+                            id: artworkId,
+                            type: ArtworkType.AUDIO,
+                            artworkFit: BoxFit.cover,
+                            nullArtworkWidget: Container(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainerHighest,
+                              child: const Icon(Icons.queue_music, size: 28),
+                            ),
+                          ),
                   ),
-                  child: const Icon(Icons.queue_music, size: 28),
                 ),
                 title: Text(
                   playlist.name,
@@ -239,8 +300,10 @@ class _PlaylistsScreenState extends State<PlaylistsScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) =>
-                          PlaylistDetailScreen(playlistId: playlist.id),
+                      builder: (_) => PlaylistDetailScreen(
+                        playlistId: playlist.id,
+                        initialSongs: _songs.isNotEmpty ? _songs : null,
+                      ),
                     ),
                   );
                 },
