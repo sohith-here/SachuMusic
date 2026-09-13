@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
+import '../models/playlist.dart';
 import '../models/song.dart';
 import '../services/audio_player_service.dart';
 import '../services/music_scanner.dart';
@@ -11,10 +12,7 @@ import 'now_playing_screen.dart';
 class PlaylistDetailScreen extends StatefulWidget {
   final String playlistId;
 
-  const PlaylistDetailScreen({
-    super.key,
-    required this.playlistId,
-  });
+  const PlaylistDetailScreen({super.key, required this.playlistId});
 
   @override
   State<PlaylistDetailScreen> createState() => _PlaylistDetailScreenState();
@@ -55,6 +53,59 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
     );
   }
 
+  void _showRenamePlaylistDialog(BuildContext context, Playlist playlist) {
+    final controller = TextEditingController(text: playlist.name);
+    controller.selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: playlist.name.length,
+    );
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Rename Playlist'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: const InputDecoration(
+              hintText: 'Playlist name',
+              border: OutlineInputBorder(),
+            ),
+            onSubmitted: (value) {
+              _handleRename(dialogContext, playlist.id, controller.text);
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () =>
+                  _handleRename(dialogContext, playlist.id, controller.text),
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _handleRename(
+    BuildContext dialogContext,
+    String playlistId,
+    String text,
+  ) {
+    final name = text.trim();
+    if (name.isEmpty) return;
+
+    final success = _playlistService.renamePlaylist(playlistId, name);
+    if (success) {
+      Navigator.pop(dialogContext);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<int>(
@@ -64,12 +115,8 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
 
         if (playlist == null) {
           return Scaffold(
-            appBar: AppBar(
-              title: const Text('Playlist'),
-            ),
-            body: const Center(
-              child: Text('Playlist not found'),
-            ),
+            appBar: AppBar(title: const Text('Playlist')),
+            body: const Center(child: Text('Playlist not found')),
           );
         }
 
@@ -93,13 +140,17 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
                 ),
                 Text(
                   '${resolvedSongs.length} ${resolvedSongs.length == 1 ? "song" : "songs"}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey,
-                      ),
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: Colors.grey),
                 ),
               ],
             ),
             actions: [
+              IconButton(
+                icon: const Icon(Icons.edit_outlined),
+                tooltip: 'Rename playlist',
+                onPressed: () => _showRenamePlaylistDialog(context, playlist),
+              ),
               IconButton(
                 icon: const Icon(Icons.playlist_add),
                 tooltip: 'Add Songs',
@@ -133,100 +184,93 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
           body: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : resolvedSongs.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.queue_music,
-                            size: 64,
-                            color: Colors.grey,
-                          ),
-                          const SizedBox(height: 16),
-                          const Text(
-                            'No songs in this playlist',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton.icon(
-                            onPressed: () =>
-                                _openAddSongs(context, playlist.id),
-                            icon: const Icon(Icons.add),
-                            label: const Text('Add Songs'),
-                          ),
-                        ],
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.queue_music,
+                        size: 64,
+                        color: Colors.grey,
                       ),
-                    )
-                  : ListView.builder(
-                      itemCount: resolvedSongs.length,
-                      itemBuilder: (context, index) {
-                        final song = resolvedSongs[index];
+                      const SizedBox(height: 16),
+                      const Text(
+                        'No songs in this playlist',
+                        style: TextStyle(fontSize: 18, color: Colors.grey),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        onPressed: () => _openAddSongs(context, playlist.id),
+                        icon: const Icon(Icons.add),
+                        label: const Text('Add Songs'),
+                      ),
+                    ],
+                  ),
+                )
+              : ListView.builder(
+                  itemCount: resolvedSongs.length,
+                  itemBuilder: (context, index) {
+                    final song = resolvedSongs[index];
 
-                        return ListTile(
-                          leading: ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: SizedBox(
-                              width: 50,
-                              height: 50,
-                              child: song.artworkId == null
-                                  ? Container(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .surfaceContainerHighest,
-                                      child: const Icon(Icons.music_note),
-                                    )
-                                  : QueryArtworkWidget(
-                                      id: song.artworkId!,
-                                      type: ArtworkType.AUDIO,
-                                      artworkFit: BoxFit.cover,
-                                      nullArtworkWidget: Container(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .surfaceContainerHighest,
-                                        child: const Icon(Icons.music_note),
-                                      ),
-                                    ),
-                            ),
+                    return ListTile(
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: SizedBox(
+                          width: 50,
+                          height: 50,
+                          child: song.artworkId == null
+                              ? Container(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .surfaceContainerHighest,
+                                  child: const Icon(Icons.music_note),
+                                )
+                              : QueryArtworkWidget(
+                                  id: song.artworkId!,
+                                  type: ArtworkType.AUDIO,
+                                  artworkFit: BoxFit.cover,
+                                  nullArtworkWidget: Container(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .surfaceContainerHighest,
+                                    child: const Icon(Icons.music_note),
+                                  ),
+                                ),
+                        ),
+                      ),
+                      title: Text(
+                        song.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      subtitle: Text(
+                        song.artist,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.remove_circle_outline),
+                        tooltip: 'Remove from playlist',
+                        onPressed: () {
+                          _playlistService.removeSongFromPlaylist(
+                            playlist.id,
+                            song.id,
+                          );
+                        },
+                      ),
+                      onTap: () async {
+                        await _player.playSong(song, playlist: resolvedSongs);
+                        if (!context.mounted) return;
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const NowPlayingScreen(),
                           ),
-                          title: Text(
-                            song.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          subtitle: Text(
-                            song.artist,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.remove_circle_outline),
-                            tooltip: 'Remove from playlist',
-                            onPressed: () {
-                              _playlistService.removeSongFromPlaylist(
-                                playlist.id,
-                                song.id,
-                              );
-                            },
-                          ),
-                          onTap: () async {
-                            await _player.playSong(
-                              song,
-                              playlist: resolvedSongs,
-                            );
-                            if (!context.mounted) return;
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const NowPlayingScreen(),
-                              ),
-                            );
-                          },
                         );
                       },
-                    ),
+                    );
+                  },
+                ),
         );
       },
     );

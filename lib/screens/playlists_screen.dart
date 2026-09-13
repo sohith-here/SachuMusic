@@ -64,6 +64,59 @@ class _PlaylistsScreenState extends State<PlaylistsScreen> {
     );
   }
 
+  void _showRenamePlaylistDialog(BuildContext context, Playlist playlist) {
+    final controller = TextEditingController(text: playlist.name);
+    controller.selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: playlist.name.length,
+    );
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Rename Playlist'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: const InputDecoration(
+              hintText: 'Playlist name',
+              border: OutlineInputBorder(),
+            ),
+            onSubmitted: (value) {
+              _handleRename(dialogContext, playlist.id, controller.text);
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () =>
+                  _handleRename(dialogContext, playlist.id, controller.text),
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _handleRename(
+    BuildContext dialogContext,
+    String playlistId,
+    String text,
+  ) {
+    final name = text.trim();
+    if (name.isEmpty) return;
+
+    final success = _playlistService.renamePlaylist(playlistId, name);
+    if (success) {
+      Navigator.pop(dialogContext);
+    }
+  }
+
   void _confirmDelete(BuildContext context, Playlist playlist) {
     showDialog(
       context: context,
@@ -166,10 +219,21 @@ class _PlaylistsScreenState extends State<PlaylistsScreen> {
                 subtitle: Text(
                   '${playlist.songIds.length} ${playlist.songIds.length == 1 ? "song" : "songs"}',
                 ),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete_outline),
-                  tooltip: 'Delete playlist',
-                  onPressed: () => _confirmDelete(context, playlist),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit_outlined),
+                      tooltip: 'Rename playlist',
+                      onPressed: () =>
+                          _showRenamePlaylistDialog(context, playlist),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline),
+                      tooltip: 'Delete playlist',
+                      onPressed: () => _confirmDelete(context, playlist),
+                    ),
+                  ],
                 ),
                 onTap: () {
                   Navigator.push(

@@ -25,7 +25,8 @@ class PlaylistService {
 
   static void ensurePlatformInitialized() {
     if (Platform.isWindows &&
-        SharedPreferencesStorePlatform.instance is! InMemorySharedPreferencesStore) {
+        SharedPreferencesStorePlatform.instance
+            is! InMemorySharedPreferencesStore) {
       PathProviderWindows.registerWith();
       SharedPreferencesWindows.registerWith();
     }
@@ -71,7 +72,9 @@ class PlaylistService {
               _playlists.add(playlist);
             }
           } catch (e) {
-            debugPrint('PlaylistService: Skipping corrupted playlist entry: $e');
+            debugPrint(
+              'PlaylistService: Skipping corrupted playlist entry: $e',
+            );
           }
         }
         changes.value++;
@@ -114,6 +117,22 @@ class PlaylistService {
       return true;
     }
     return false;
+  }
+
+  bool renamePlaylist(String playlistId, String newName) {
+    final trimmedName = newName.trim();
+    if (trimmedName.isEmpty) return false;
+
+    final index = _playlists.indexWhere((p) => p.id == playlistId);
+    if (index == -1) return false;
+
+    final playlist = _playlists[index];
+    if (playlist.name == trimmedName) return true;
+
+    _playlists[index] = playlist.copyWith(name: trimmedName);
+    changes.value++;
+    _saveFuture = _savePlaylists();
+    return true;
   }
 
   bool addSongToPlaylist(String playlistId, String songId) {
