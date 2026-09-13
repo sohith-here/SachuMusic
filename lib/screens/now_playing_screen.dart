@@ -6,6 +6,7 @@ import '../services/favorites_service.dart';
 
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:just_audio/just_audio.dart';
+import 'up_next_screen.dart';
 
 class NowPlayingScreen extends StatefulWidget {
   const NowPlayingScreen({super.key});
@@ -21,7 +22,24 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Now Playing'), centerTitle: true),
+      appBar: AppBar(
+        title: const Text('Now Playing'),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.queue_music),
+            tooltip: 'Up Next',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const UpNextScreen(),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
       body: StreamBuilder<Song?>(
         stream: _player.currentSongStream,
         initialData: _player.currentSong,

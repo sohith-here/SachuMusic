@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 
 import 'recently_played_service.dart';
@@ -47,6 +48,75 @@ class AudioPlayerService {
   Stream<Song?> get currentSongStream async* {
     yield currentSong;
     yield* _currentSongController.stream;
+  }
+
+  // ============================================================
+  // QUEUE
+  // ============================================================
+
+  List<Song> get queue => List.unmodifiable(_playlist);
+
+  int get currentIndex => _playlist.indexWhere((s) => s.id == _currentSong?.id);
+
+  final StreamController<List<Song>> _queueController =
+      StreamController<List<Song>>.broadcast();
+
+  Stream<List<Song>> get queueStream async* {
+    yield queue;
+    yield* _queueController.stream;
+  }
+
+  void _notifyQueueChanged() {
+    if (!_queueController.isClosed) {
+      _queueController.add(queue);
+    }
+  }
+
+  Future<void> playFromQueue(int index) async {
+    await _playFromPlaylist(index);
+  }
+
+  bool removeFromQueue(int queueIndex) {
+    if (queueIndex < 0 || queueIndex >= _playlist.length) {
+      return false;
+    }
+
+    final currIdx = currentIndex;
+    if (currIdx == -1 || queueIndex <= currIdx) {
+      return false;
+    }
+
+    final songToRemove = _playlist[queueIndex];
+    _playlist.removeAt(queueIndex);
+
+    final indexInOriginal =
+        _originalPlaylist.indexWhere((s) => s.id == songToRemove.id);
+    if (indexInOriginal != -1) {
+      _originalPlaylist.removeAt(indexInOriginal);
+    }
+
+    final indexInShuffle =
+        _shufflePlaylist.indexWhere((s) => s.id == songToRemove.id);
+    if (indexInShuffle != -1) {
+      _shufflePlaylist.removeAt(indexInShuffle);
+    }
+
+    _notifyQueueChanged();
+    return true;
+  }
+
+  @visibleForTesting
+  void setQueueForTesting({
+    required List<Song> playlist,
+    Song? currentSong,
+    bool shuffle = false,
+  }) {
+    _originalPlaylist = List<Song>.from(playlist);
+    _playlist = List<Song>.from(playlist);
+    _shufflePlaylist = shuffle ? List<Song>.from(playlist) : [];
+    _shuffleEnabled = shuffle;
+    _currentSong = currentSong ?? (playlist.isNotEmpty ? playlist.first : null);
+    _notifyQueueChanged();
   }
 
   // ============================================================
@@ -104,6 +174,8 @@ class AudioPlayerService {
     _shufflePlaylist = [];
 
     _shuffleEnabled = false;
+
+    _notifyQueueChanged();
 
     final index = _playlist.indexWhere((s) => s.id == song.id);
 
@@ -332,6 +404,8 @@ class AudioPlayerService {
       // Restore normal playlist.
       _playlist = List<Song>.from(_originalPlaylist);
     }
+
+    _notifyQueueChanged();
   }
 
   // ============================================================
@@ -394,5 +468,6 @@ class AudioPlayerService {
     await _processingSubscription?.cancel();
     await player.dispose();
     await _currentSongController.close();
+    await _queueController.close();
   }
 }
